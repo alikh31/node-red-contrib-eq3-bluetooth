@@ -1,0 +1,93 @@
+<script type="text/javascript">
+  RED.nodes.registerType('eq3-bluetooth in',{
+    category: 'output',
+    color: '#FFFFAA',
+    defaults: {
+      eq3devicein: { value: '', required: true}
+    },
+    inputs: 1,
+    outputs: 0,
+    icon: 'bluetooth.png',
+    label: function() {
+      return this.eq3devicein || 'eq3-ble';
+    },
+    align: 'right'
+  });
+</script>
+
+<script type="text/x-red" data-template-name="eq3-bluetooth in">
+  <div class="form-row">
+    <label for="node-input-eq3devicein"><i class="icon-tag"></i> Device</label>
+    <select id="node-input-eq3devicein">
+    </select>
+    <script type="text/javascript">
+    console.log($("#node-input-eq3devicein").text())
+      if ($("#node-input-eq3devicein").text().trim() === ''){
+        $("#node-input-eq3devicein option").remove();
+        $.getJSON("/eq3", null, function (data) {
+            $.each(data, function(i,item){
+                // Create and append the new options into the select list
+                $("#node-input-eq3devicein").append("<option value="+item+">"+item+"</option>");
+            });
+        });
+    }
+    </script>
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="eq3-bluetooth in">
+    <p>A node to control the eQ-3 bluetooth</p>
+    <p>Accepts messages with payload of type object with following structure:
+      <pre>{
+
+      }</pre>
+    </p>
+</script>
+
+
+<script type="text/javascript">
+  RED.nodes.registerType('eq3-bluetooth out',{
+    category: 'input',
+    color: '#FFFFAA',
+    defaults: {
+      eq3deviceout: { value: '', required: true}
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: 'bluetooth.png',
+    label: function() {
+      return this.eq3deviceout || 'eq3-ble';
+    },
+    align: 'left'
+  });
+</script>
+
+<script type="text/x-red" data-template-name="eq3-bluetooth out">
+  <div class="form-row">
+    <label for="node-input-eq3deviceout"><i class="icon-tag"></i> Device</label>
+    <select id="node-input-eq3deviceout">
+    </select>
+    <script type="text/javascript">
+    console.log($("#node-input-eq3deviceout").text())
+      if ($("#node-input-eq3deviceout").text().trim() === ''){
+        $("#node-input-eq3deviceout option").remove();
+        $.getJSON("/eq3", null, function (data) {
+            $.each(data, function(i,item){
+                // Create and append the new options into the select list
+                $("#node-input-eq3deviceout").append("<option value="+item+">"+item+"</option>");
+            });
+        });
+    }
+    </script>
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="eq3-bluetooth out">
+
+    <p> node to query the eQ-3 Max! Cube</p>
+    <p>Whenever an input is received, device status is updated from the Maxcube, and sent as separate messages (one for each device) of form:
+      <pre>{
+
+      }</pre>
+    </p>
+</script>
