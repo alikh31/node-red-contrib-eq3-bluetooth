@@ -37,9 +37,11 @@
 
 <script type="text/x-red" data-help-name="eq3-bluetooth in">
     <p>A node to control the eQ-3 bluetooth</p>
-    <p>Accepts messages with payload of type object with following structure:
+    <p>Accepts messages with payload of type object with following structure, targetTemperature is in CELSIUS, targetHeatingCoolingState can be 0 for off 1 for day mode, 2 for night mode and 3 for auto mode and pass refreshDevice to true:
       <pre>{
-
+        targetTemperature: '',
+        targetHeatingCoolingState: '',
+        refreshDevice: ''
       }</pre>
     </p>
 </script>
@@ -84,10 +86,14 @@
 
 <script type="text/x-red" data-help-name="eq3-bluetooth out">
 
-    <p> node to query the eQ-3 Max! Cube</p>
-    <p>Whenever an input is received, device status is updated from the Maxcube, and sent as separate messages (one for each device) of form:
+    <p> node to query data from eq3-bluetooth device</p>
+    <p>Get all the information about the device
       <pre>{
-
+        temperature: '',
+        targetTemperature: '',
+        temperatureDisplayUnits: '',
+        heatingCoolingState: '',
+        targetHeatingCoolingState: ''
       }</pre>
     </p>
 </script>

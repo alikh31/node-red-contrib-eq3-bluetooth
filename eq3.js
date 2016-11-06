@@ -43,7 +43,15 @@ module.exports = function(RED) {
 
 
     node.on('input', function(msg) {
-      console.log(this.eq3BleDevice)
+      if(msg.payload.targetTemperature) {
+        this.eq3BleDevice.setTargetTemperature(msg.targetTemperature)
+      }
+      if(msg.payload.targetHeatingCoolingState) {
+        this.eq3BleDevice.setTargetHeatingCoolingState(msg.targetHeatingCoolingState)
+      }
+      if(msg.payload.refreshDevice) {
+        this.eq3BleDevice.refreshDevice()
+      }
     })
   }
   RED.nodes.registerType("eq3-bluetooth in", eq3in);
