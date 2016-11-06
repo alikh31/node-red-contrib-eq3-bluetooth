@@ -44,10 +44,10 @@ module.exports = function(RED) {
 
     node.on('input', function(msg) {
       if(msg.payload.targetTemperature) {
-        this.eq3BleDevice.setTargetTemperature(msg.targetTemperature)
+        this.eq3BleDevice.setTargetTemperature(msg.payload.targetTemperature)
       }
       if(msg.payload.targetHeatingCoolingState) {
-        this.eq3BleDevice.setTargetHeatingCoolingState(msg.targetHeatingCoolingState)
+        this.eq3BleDevice.setTargetHeatingCoolingState(msg.payload.targetHeatingCoolingState)
       }
       if(msg.payload.refreshDevice) {
         this.eq3BleDevice.refreshDevice()
