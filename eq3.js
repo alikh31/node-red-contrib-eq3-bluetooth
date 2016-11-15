@@ -11,9 +11,7 @@ module.exports = function(RED) {
 
   eq3device.discover((device) => {
     device.connectAndSetUp()
-    .then(() => {
-      devices[device.id] = device
-    })
+    devices[device.id] = device
   })
 
   function eq3in(config) {
