@@ -1,17 +1,20 @@
 'use strict'
 
 const eq3device = require('./lib/eq3device')
-const devices = {}
-
 
 module.exports = function(RED) {
+  const devices = {}
+
   RED.httpNode.get('/eq3', function(req,res) {
     res.send(Object.keys(devices))
   });
 
-  eq3device.discover((device) => {
+  eq3device.discover(function(device) {
     device.connectAndSetUp()
-    devices[device.id] = device
+    .then(function(){
+      devices[device.id] = device
+    })
+    .catch((e) => console.log(e))
   })
 
   function eq3in(config) {
@@ -60,8 +63,13 @@ module.exports = function(RED) {
     }, 2000)
 
     node.on('input', function(msg) {
-      node.eq3BleDevice.getInfo((data) => {
+      node.eq3BleDevice.getInfo()
+      .then((data) => {
         msg.payload = data
+        node.send(msg)
+      })
+      .catch((e) => {
+        msg.payload = e
         node.send(msg)
       })
     });
