@@ -1,7 +1,6 @@
 'use strict'
 
-const noble = require('noble')
-const eq3BleDevice = require('./lib/eq3BleDevice')
+const eq3device = require('./lib/eq3device')
 const devices = {}
 
 
@@ -10,21 +9,11 @@ module.exports = function(RED) {
     res.send(Object.keys(devices))
   });
 
-  noble.on('stateChange', (state) => {
-    if (state === 'poweredOn') {
-      noble.startScanning()
-
-      setTimeout(() => {
-        noble.stopScanning()
-      },60000)
-    }
-  })
-
-  noble.on('discover', (peripheral) => {
-    if(peripheral.advertisement.localName=="CC-RT-BLE")
-    {
-      devices[peripheral.id] = new eq3BleDevice(peripheral)
-    }
+  eq3device.discover((device) => {
+    device.connectAndSetUp()
+    .then(() => {
+      devices[device.id] = device
+    })
   })
 
   function eq3in(config) {
@@ -39,18 +28,18 @@ module.exports = function(RED) {
       } else {
         node.status({fill:"red",shape:"ring",text:"disconnected"});
       }
-    }, 2000)
+    }, 10000)
 
 
     node.on('input', function(msg) {
       if(msg.payload.targetTemperature) {
-        this.eq3BleDevice.setTargetTemperature(msg.payload.targetTemperature)
+        this.eq3BleDevice.setTemperature(msg.payload.targetTemperature)
       }
       if(msg.payload.targetHeatingCoolingState) {
-        this.eq3BleDevice.setTargetHeatingCoolingState(msg.payload.targetHeatingCoolingState)
-      }
-      if(msg.payload.refreshDevice) {
-        this.eq3BleDevice.refreshDevice()
+        if (msg.payload.targetHeatingCoolingState === 0)
+          this.eq3BleDevice.turnOn()
+        if (msg.payload.targetHeatingCoolingState === 1)
+          this.eq3BleDevice.turnOff()
       }
     })
   }
@@ -73,7 +62,7 @@ module.exports = function(RED) {
     }, 2000)
 
     node.on('input', function(msg) {
-      node.eq3BleDevice.getData((data) => {
+      node.eq3BleDevice.getInfo((data) => {
         msg.payload = data
         node.send(msg)
       })

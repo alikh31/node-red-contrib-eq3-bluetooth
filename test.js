@@ -5,13 +5,16 @@ A.discover((device) => {
     console.log('got disconnected!');
   })
 
-  // console.log('d',device)
 
-  // device.connectAndSetUp()
-  // .then(() => {
-  //   console.log('acc')
-  // })
-  // .catch((e) => {
-  //   console.log(e)
-  // })
+  device.connectAndSetUp()
+  .then(() => {
+    console.log('connected')
+    return device.getInfo()
+  })
+  .then((a) => {
+    console.log(a)
+  })
+  .catch((e) => {
+    console.log(e)
+  })
 })
