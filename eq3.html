@@ -1,99 +1,47 @@
 <script type="text/javascript">
-  RED.nodes.registerType('eq3-bluetooth in',{
-    category: 'output',
-    color: '#FFFFAA',
-    defaults: {
-      eq3devicein: { value: '', required: true}
-    },
-    inputs: 1,
-    outputs: 0,
-    icon: 'bluetooth.png',
-    label: function() {
-      return this.eq3devicein || 'eq3-ble';
-    },
-    align: 'right'
-  });
-</script>
-
-<script type="text/x-red" data-template-name="eq3-bluetooth in">
-  <div class="form-row">
-    <label for="node-input-eq3devicein"><i class="icon-tag"></i> Device</label>
-    <select id="node-input-eq3devicein">
-    </select>
-    <script type="text/javascript">
-    console.log($("#node-input-eq3devicein").text())
-      if ($("#node-input-eq3devicein").text().trim() === ''){
-        $("#node-input-eq3devicein option").remove();
-        $.getJSON("/eq3", null, function (data) {
-            $.each(data, function(i,item){
-                // Create and append the new options into the select list
-                $("#node-input-eq3devicein").append("<option value="+item+">"+item+"</option>");
-            });
-        });
-    }
-    </script>
-  </div>
-</script>
-
-<script type="text/x-red" data-help-name="eq3-bluetooth in">
-    <p>A node to control the eQ-3 bluetooth</p>
-    <p>Accepts messages with payload of type object with following structure, targetTemperature is in CELSIUS, targetHeatingCoolingState can be 0 for off 1 for day mode, 2 for night mode and 3 for auto mode and pass refreshDevice to true:
-      <pre>{
-        targetTemperature: '',
-        targetHeatingCoolingState: '',
-        refreshDevice: ''
-      }</pre>
-    </p>
-</script>
-
-
-<script type="text/javascript">
-  RED.nodes.registerType('eq3-bluetooth out',{
+  RED.nodes.registerType('eq3-bluetooth',{
     category: 'input',
     color: '#FFFFAA',
     defaults: {
-      eq3deviceout: { value: '', required: true}
+      eq3device: { value: '', required: true}
     },
     inputs: 1,
     outputs: 1,
     icon: 'bluetooth.png',
     label: function() {
-      return this.eq3deviceout || 'eq3-ble';
+      return this.eq3device || 'eq3-ble';
     },
     align: 'left'
   });
 </script>
 
-<script type="text/x-red" data-template-name="eq3-bluetooth out">
+<script type="text/x-red" data-template-name="eq3-bluetooth">
   <div class="form-row">
-    <label for="node-input-eq3deviceout"><i class="icon-tag"></i> Device</label>
-    <select id="node-input-eq3deviceout">
-    </select>
-    <script type="text/javascript">
-    console.log($("#node-input-eq3deviceout").text())
-      if ($("#node-input-eq3deviceout").text().trim() === ''){
-        $("#node-input-eq3deviceout option").remove();
-        $.getJSON("/eq3", null, function (data) {
-            $.each(data, function(i,item){
-                // Create and append the new options into the select list
-                $("#node-input-eq3deviceout").append("<option value="+item+">"+item+"</option>");
-            });
-        });
-    }
-    </script>
+    <label for="node-input-eq3device"><i class="icon-tag"></i> Device</label>
+    <input id="node-input-eq3device"></input>
   </div>
 </script>
 
-<script type="text/x-red" data-help-name="eq3-bluetooth out">
+<script type="text/x-red" data-help-name="eq3-bluetooth">
 
-    <p> node to query data from eq3-bluetooth device</p>
-    <p>Get all the information about the device
+    <p> node to configure and query data from eq3-bluetooth device</p>
+    <p>Returns devices info after 2 seconds after each input message
       <pre>{
-        temperature: '',
-        targetTemperature: '',
-        temperatureDisplayUnits: '',
-        heatingCoolingState: '',
-        targetHeatingCoolingState: ''
+        {
+          "status": {
+            "manual": true,
+            "holiday": false,
+            "boost": false,
+            "dst": true,
+            "openWindow": false,
+            "lowBattery": false
+          },
+          "valvePosition": 100,
+          "targetTemperature": 30
+        }
       }</pre>
     </p>
+    <p>set msg.payload.setState to set the state of device value should ve one of 'on', 'off', 'manual' or 'auto'.</p>
+    <p>set msg.payload.boost to '1' to enable boost mode and '0' to desable it.</p>
+    <p>set msg.payload.setTemperature to adjust the target temperature, valid values are from 4.5 to 30.</p>
 </script>
