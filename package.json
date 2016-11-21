@@ -25,6 +25,6 @@
   },
   "homepage": "https://github.com/alikh31/node-red-contrib-eq3-bluetooth#readme",
   "dependencies": {
-    "noble": "^1.7.0"
+    "noble-device": "^1.4.1"
   }
 }
