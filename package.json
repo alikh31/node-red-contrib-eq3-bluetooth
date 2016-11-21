@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-eq3-bluetooth",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "node-red binding to bluetooth eq3 radiator valves without Max! Cube",
   "main": "index.js",
   "scripts": {
