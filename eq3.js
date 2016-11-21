@@ -63,7 +63,6 @@ module.exports = function(RED) {
             break;
         }
 
-        console.log(msg.payload.setTemperature)
         if (msg.payload.setTemperature)
           device.setTemperature(msg.payload.setTemperature)
       }
