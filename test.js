@@ -5,10 +5,10 @@ A.discover((device) => {
     console.log('got disconnected!');
   })
 
-  console.log('discovered')
+  console.log('discovered', device)
   device.connectAndSetup()
   .then(() => {
-    console.log('connected')
+    console.log('connected', device)
     setInterval(() => {
       device.getInfo()
       .then(a => {
