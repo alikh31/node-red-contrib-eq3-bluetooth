@@ -7,9 +7,12 @@ module.exports = function(RED) {
     var node = this;
     RED.nodes.createNode(this, config);
     this.serverConfig = RED.nodes.getNode(config.server);
-    eq3device.discoverByAddress(config.eq3device ,function(device) {
-      node.device = device
-    })
+
+    if (!node.device) {
+      eq3device.discoverByAddress(config.eq3device ,function(device) {
+        node.device = device
+      })
+    }
 
     setInterval(() => {
       if(node.device) {
@@ -67,8 +70,8 @@ module.exports = function(RED) {
           device.setTemperature(msg.payload.setTemperature)
       }
 
-      if(!node.device.connectedAndSetUp)
-        node.device.connectAndSetup()
+      if(!device.connectedAndSetUp)
+        device.connectAndSetup()
         .then(() => setCommand())
       else
         setCommand()
