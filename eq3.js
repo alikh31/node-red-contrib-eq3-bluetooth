@@ -7,14 +7,16 @@ module.exports = function(RED) {
     var node = this;
     RED.nodes.createNode(this, config);
     this.serverConfig = RED.nodes.getNode(config.server);
+    node.device = global[config.eq3device]
 
     if (!node.device) {
       eq3device.discoverByAddress(config.eq3device ,function(device) {
         node.device = device
+        global[config.eq3device] = device
       })
     }
 
-    setInterval(() => {
+    node.intervalId = setInterval(() => {
       if(node.device) {
         node.status({fill:"green",shape:"ring",text:"connected"});
       } else {
@@ -22,11 +24,15 @@ module.exports = function(RED) {
       }
     }, 10000)
 
+    node.on('close', function(done) {
+      clearInterval(node.intervalId)
+      done()
+    })
+
     node.on('input', function(msg) {
-      var device = node.device
-      var setCommand = function() {
+      node.setCommand = function() {
         setTimeout(() => {
-          device.getInfo()
+          node.device.getInfo()
           .then(a => {
             msg.payload = a
             node.send(msg)
@@ -37,18 +43,18 @@ module.exports = function(RED) {
 
         switch (msg.payload.setState) {
           case 'on':
-            device.turnOn()
+            node.device.turnOn()
             break;
           case 'off':
-            device.turnOff()
+            node.device.turnOff()
             break;
 
           case 'manual':
-            device.manualMode()
+            node.device.manualMode()
             break;
 
           case 'auto':
-            device.automaticMode()
+            node.device.automaticMode()
             break;
           default:
             break;
@@ -56,10 +62,10 @@ module.exports = function(RED) {
 
         switch (msg.payload.boost) {
           case '0':
-            device.setBoost(false)
+            node.device.setBoost(false)
             break;
           case '1':
-            device.setBoost(true)
+            node.device.setBoost(true)
             break;
 
           default:
@@ -67,14 +73,14 @@ module.exports = function(RED) {
         }
 
         if (msg.payload.setTemperature)
-          device.setTemperature(msg.payload.setTemperature)
+          node.device.setTemperature(msg.payload.setTemperature)
       }
 
-      if(!device.connectedAndSetUp)
-        device.connectAndSetup()
-        .then(() => setCommand())
+      if(!node.device.connectedAndSetUp)
+        node.device.connectAndSetup()
+        .then(() => node.setCommand())
       else
-        setCommand()
+        node.setCommand()
     });
   }
   RED.nodes.registerType("eq3-bluetooth", eq3);
