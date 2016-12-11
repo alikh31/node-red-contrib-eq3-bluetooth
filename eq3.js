@@ -76,7 +76,24 @@ module.exports = function(RED) {
           node.device.setTemperature(msg.payload.setTemperature)
       }
 
-      if(!node.device.connectedAndSetUp)
+      if(!node.device) {
+        RED.log.error('the specified device at ' + config.eq3device
+        + ' has not been found yet')
+        RED.log.warn('list of all available addressess will be retrieved...')
+        eq3device.discoverAll((device) => {
+          console.log(node.device)
+          console.log(config.eq3device !==  device.adress, config.eq3device, device.adress)
+          if(!node.device || config.eq3device !==  device.adress)
+            RED.log.warn('found device at address ' + device.address)
+
+          if(!node.device && config.eq3device !==  device.id) {
+            RED.log.info('device has found and configured!')
+            global[config.eq3device] = device
+            node.device = global[config.eq3device]
+          }
+        })
+      }
+      else if(!node.device.connectedAndSetUp)
         node.device.connectAndSetup()
         .then(() => node.setCommand())
       else
