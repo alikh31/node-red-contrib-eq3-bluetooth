@@ -1,0 +1,210 @@
+processor:CYW20737?
+
+stm8LO52 C6T6
+BCM20736S
+
+to run on linux:
+give permissions:
+sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
+(https://github.com/noble/noble#running-on-linux)
+
+
+
+00 - sysinfo req
+  returns 01 6e 00 00 7e 75 81 61 60 63 61 61 68 62 92
+
+03 XX ... XX -set day/time
+  returns 02 01 08 00 04 14 - an info response
+
+10 XX .... XX set day - response is 02 02 0n (0n is day)
+11 XX XX - set day/night temp
+  returns info msg
+
+13 XX - set temp offset
+  returns 02 80
+  
+14 XX XX set window open (temp*2, dur_min/5)
+  returns info msg
+
+20 xx req profile XX = day 0-6 (0 = saturday)
+  returns 21 1 14 28 2a 36 14 66 2a 84 14 90 00 00 00 00
+    21 = type 1 =day 
+      14 28 = temp(0x14/2=10), time (28=> 40x10 => 400 minutes)
+      2a 36 
+      14 66 
+      2a 84
+    
+    
+
+40 XX - set mode XX= mode<<6 - does not seem to work? 40 00 - auto 40 40 manual 
+  returns
+  - auto - info response
+  - manual - info response
+  - eco - send extra temp and time info response plus extra 0b 68 19 08
+    set raw_status [writeRequest $REQUESTS(setVacationMode) "[decimalToHex $enctemp][decimalToHex $day][decimalToHex $year][decimalToHex $enctime][decimalToHex $month]"]
+
+
+40 FF XX ... XX - set vacation mode
+41 XX - set temp
+43 - comfort temp (e.g. 20) (day mode)
+44 - eco temp (e.g. 17) (night mode)
+45 00 boost off
+45 01 boost on - or 45 FF?
+
+80 00 - set lock state 0
+80 01 - set lock state 1
+  returns 02 01 01 XX 04 2a - where XX was 2d, then went to 39 when put outside (some sort of inverted temp?)
+    after a time outside: 02 01 11 00 04 18  (0x10=window open?)
+    02 - frame  
+    01 ??
+    11 (0x80 = lowbat, 0x40/0x20=??, 0x10 = window, 0x03=mode(0auto, 1man, 2eco), 0x4 = boost )
+    04 - 
+    18 - demand temp = 16+8=24/2 = 12 | 2a=42->21c
+    
+    
+
+A0 - start firmware update
+A1 - send firmware (14 bytes, zero term)
+
+F0 - factory reset
+
+
+returns: first byte is frame type; 01/02/A0/A1
+01 6e(ver) 00(typecode) 00 7e 75 81 61 60 63 61 61 68 62 92 - some sort of serial number
+02 80(nop?)
+02 X1 01(bitfield) 39(may have window) 04 2a(setpoint temp)
+  if away mode, followed by 4 bytes e.g. 0b 68 1e 08 which are (day, year-2000, 1/2 hours, month)
+  bitfield:
+    manual: 1,
+    holiday: 2,
+    boost: 4,
+    dst: 8,
+    openWindow: 16,
+    lock: 32,
+    unknown2: 64,
+    lowBattery: 128,
+
+  
+02 x2 0n - profile response received
+04 - time request
+
+21 DD XX...XX - profile data
+
+A0 - firmware update start request
+A1 XX - firmware update continue
+                    case 0x11: // start next firmware package
+                        break;
+                    case 0x22: // send next frame
+                        break
+                    case 0x33: // restart frame transmission
+                        break;
+                    case 0x44: // update finished
+                        break;
+
+commands:
+gatttool -l medium -I -b 00:1A:22:09:08:37
+
+connect
+char-write-req 411 00
+
+
+
+export function parseProfile(buffer) {
+  const profile = {};
+  const periods = [];
+  profile.periods = periods;
+  if (buffer[0] === 33) {
+    // eslint-disable-next-line prefer-destructuring
+    profile.dayOfWeek = buffer[1]; // 0-saturday, 1-sunday
+    for (let i = 2; i < buffer.length; i += 2) {
+      if (buffer[i] !== 0) {
+        const temperature = (buffer[i] / 2);
+        const to = buffer[i + 1];
+        const toHuman = ((buffer[i + 1] * 10) / 60);
+        const from = periods.length === 0 ? 0 : periods[periods.length - 1].to;
+        const fromHuman = periods.length === 0 ? 0 : periods[periods.length - 1].toHuman;
+        periods.push({
+          temperature,
+          from,
+          to,
+          fromHuman,
+          toHuman,
+        });
+      }
+    }
+  }
+  return profile;
+}
+
+
+
+
+
+
+
+
+[bluetooth]# connect 00:1A:22:09:08:37
+Attempting to connect to 00:1A:22:09:08:37
+[CHG] Device 00:1A:22:09:08:37 Connected: yes
+Connection successful
+[NEW] Primary Service
+        /org/bluez/hci0/dev_00_1A_22_09_08_37/service0200
+        00001801-0000-1000-8000-00805f9b34fb
+        Generic Attribute Profile
+[NEW] Characteristic
+        /org/bluez/hci0/dev_00_1A_22_09_08_37/service0200/char0210
+        00002a05-0000-1000-8000-00805f9b34fb
+        Service Changed
+[NEW] Descriptor
+        /org/bluez/hci0/dev_00_1A_22_09_08_37/service0200/char0210/desc0220
+        00002902-0000-1000-8000-00805f9b34fb
+        Client Characteristic Configuration
+[NEW] Primary Service
+        /org/bluez/hci0/dev_00_1A_22_09_08_37/service0300
+        0000180a-0000-1000-8000-00805f9b34fb
+        Device Information
+[NEW] Characteristic
+        /org/bluez/hci0/dev_00_1A_22_09_08_37/service0300/char0310
+        00002a29-0000-1000-8000-00805f9b34fb
+        Manufacturer Name String
+[NEW] Characteristic
+        /org/bluez/hci0/dev_00_1A_22_09_08_37/service0300/char0320
+        00002a24-0000-1000-8000-00805f9b34fb
+        Model Number String
+[NEW] Primary Service
+        /org/bluez/hci0/dev_00_1A_22_09_08_37/service0400
+        3e135142-654f-9090-134a-a6ff5bb77046
+        Vendor specific
+[NEW] Characteristic
+        /org/bluez/hci0/dev_00_1A_22_09_08_37/service0400/char0410
+        3fa4585a-ce4a-3bad-db4b-b8df8179ea09
+        Vendor specific
+[NEW] Characteristic
+        /org/bluez/hci0/dev_00_1A_22_09_08_37/service0400/char0420
+        d0e8434d-cd29-0996-af41-6c90f4e0eb2a
+        Vendor specific
+[NEW] Descriptor
+        /org/bluez/hci0/dev_00_1A_22_09_08_37/service0400/char0420/desc0430
+        00002902-0000-1000-8000-00805f9b34fb
+        Client Characteristic Configuration
+[NEW] Primary Service
+        /org/bluez/hci0/dev_00_1A_22_09_08_37/serviceff00
+        9e5d1e47-5c13-43a0-8635-82ad38a1386f
+        Vendor specific
+[NEW] Characteristic
+        /org/bluez/hci0/dev_00_1A_22_09_08_37/serviceff00/charff01
+        e3dd50bf-f7a7-4e99-838e-570a086c666b
+        Vendor specific
+[NEW] Descriptor
+        /org/bluez/hci0/dev_00_1A_22_09_08_37/serviceff00/charff01/descff03
+        00002902-0000-1000-8000-00805f9b34fb
+        Client Characteristic Configuration
+[NEW] Characteristic
+        /org/bluez/hci0/dev_00_1A_22_09_08_37/serviceff00/charff04
+        92e86c7a-d961-4091-b74f-2409e72efe36
+        Vendor specific
+[NEW] Characteristic
+        /org/bluez/hci0/dev_00_1A_22_09_08_37/serviceff00/charff06
+        347f7608-2e2d-47eb-913b-75d4edc4de3b
+        Vendor specific
+[CHG] Device 00:1A:22:09:08:37 ServicesResolved: yes
